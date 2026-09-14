@@ -16,6 +16,7 @@ import {
   buildWanPrompt, type DecorPreset, type MotionState, type MoodState, type OutputState,
 } from "@/lib/decorPresets";
 import { cn } from "@/lib/utils";
+import { VIDEO_PROMPT_TEMPLATES } from "@/data/decorPromptTemplates";
 import WanHistory, { type WanRun, type WanSetup } from "./wan/WanHistory";
 import WanPromptChat from "./wan/WanPromptChat";
 
@@ -285,6 +286,28 @@ const AdminWanVideo = () => {
               placeholder="напр. Свадебная арка в солнечном зале с каскадом цветов…"
               className="resize-none"
             />
+            <div className="space-y-2 pt-1">
+              <Label className="text-[11px] uppercase tracking-[0.2em] font-semibold text-muted-foreground">
+                Шаблоны промтов · {VIDEO_PROMPT_TEMPLATES.length}
+              </Label>
+              <div className="flex gap-2 overflow-x-auto pb-2 snap-x -mx-1 px-1">
+                {VIDEO_PROMPT_TEMPLATES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setUserPrompt(t.prompt)}
+                    className={cn(
+                      "shrink-0 text-left rounded-lg border px-3 py-2 text-xs transition w-[170px]",
+                      userPrompt === t.prompt
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-foreground/30 bg-card"
+                    )}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Preset carousel */}

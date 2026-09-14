@@ -8,35 +8,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  Search, Filter, Eye, ChevronLeft, ChevronRight, Instagram,
+  Search, Eye, ChevronLeft, ChevronRight,
   LogOut, LayoutGrid, List,
   Phone as PhoneIcon, MessageSquare, Mail as MailIcon,
-  ShoppingBag, Users, CalendarDays, BarChart3, Palette, Sparkles, Loader2, Menu, X, Camera,
-  Send, Image as ImageIcon, Settings, BookOpen, FolderOpen, Workflow, Building2, Film, Package, MessageCircle,
-  Cpu, Wand2,
+  Users, CalendarDays, Loader2, Menu, X,
+  Image as ImageIcon, Film,
 } from "lucide-react";
 import AdminLogin from "@/components/AdminLogin";
 import type { Session } from "@supabase/supabase-js";
 import { isAdminUser } from "@/lib/admin";
 
-// Lazy-load all admin sub-panels
+// Lazy-load admin sub-panels
 const AdminCalendar = lazy(() => import("@/components/AdminCalendar"));
-const AdminAIGenerator = lazy(() => import("@/components/AdminAIGenerator"));
-const AdminInstagramAnalytics = lazy(() => import("@/components/admin/AdminInstagramAnalytics"));
-const AdminVenueAnalyzer = lazy(() => import("@/components/admin/AdminVenueAnalyzer"));
-const AdminAIInsights = lazy(() => import("@/components/admin/AdminAIInsights"));
-const AdminAnalytics = lazy(() => import("@/components/admin/AdminAnalytics"));
-const AdminTelegramSettings = lazy(() => import("@/components/admin/AdminTelegramSettings"));
-const AdminBrandDesign = lazy(() => import("@/components/admin/AdminBrandDesign"));
-const AdminMediaManager = lazy(() => import("@/components/admin/AdminMediaManager"));
-const AdminEventPlannerPipeline = lazy(() => import("@/components/admin/AdminEventPlannerPipeline"));
-const AdminFacadeGenerator = lazy(() => import("@/components/admin/AdminFacadeGenerator"));
-const AdminWorks = lazy(() => import("@/components/admin/AdminWorks"));
-const AdminPackages = lazy(() => import("@/components/admin/AdminPackages"));
+const AdminDecorImageGenerator = lazy(() => import("@/components/admin/AdminDecorImageGenerator"));
 const AdminWanVideo = lazy(() => import("@/components/admin/AdminWanVideo"));
-const AdminConcierge = lazy(() => import("@/components/admin/AdminConcierge"));
-const AdminAIProvider = lazy(() => import("@/components/admin/AdminAIProvider"));
-const AdminDecorPromptGenerator = lazy(() => import("@/components/admin/AdminDecorPromptGenerator"));
 
 type Lead = {
   id: string; name: string; phone: string; email: string; event_type: string;
@@ -60,27 +45,13 @@ const getStatusBadge = (status: string) => {
   return s ? <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${s.color}`}>{s.label}</span> : <Badge variant="outline">{status}</Badge>;
 };
 
-type Section = "leads" | "works" | "packages" | "calendar" | "ig-analytics" | "ai" | "ai-facade" | "ai-video" | "ai-decor-prompt" | "venue" | "ai-insights" | "analytics" | "telegram" | "brand" | "media" | "event-pipeline" | "concierge" | "ai-provider";
+type Section = "leads" | "calendar" | "ai-image" | "ai-video";
 
 const NAV_ITEMS: { key: Section; label: string; icon: any; group?: string }[] = [
   { key: "leads", label: "Лиды", icon: Users, group: "CRM" },
-  { key: "works", label: "Работы", icon: FolderOpen, group: "CRM" },
-  { key: "packages", label: "Пакеты", icon: Package, group: "CRM" },
   { key: "calendar", label: "Календарь", icon: CalendarDays, group: "CRM" },
-  { key: "ig-analytics", label: "IG Аналитика", icon: BarChart3, group: "Маркетинг" },
-  { key: "analytics", label: "Аналитика", icon: BarChart3, group: "Маркетинг" },
-  { key: "venue", label: "Анализ площадки", icon: Camera, group: "AI" },
-  { key: "ai", label: "AI Генератор", icon: Sparkles, group: "AI" },
-  { key: "ai-facade", label: "AI Фасады", icon: Building2, group: "AI" },
-  { key: "ai-video", label: "AI Видео", icon: Film, group: "AI" },
-  { key: "ai-decor-prompt", label: "AI Промт-декор", icon: Wand2, group: "AI" },
-  { key: "ai-insights", label: "AI Инсайты", icon: Sparkles, group: "AI" },
-  { key: "event-pipeline", label: "Event Pipeline", icon: Workflow, group: "AI" },
-  { key: "media", label: "Media Manager", icon: ImageIcon, group: "Контент" },
-  { key: "brand", label: "Brand Design", icon: Palette, group: "Контент" },
-  { key: "telegram", label: "Telegram", icon: Send, group: "Настройки" },
-  { key: "concierge", label: "Concierge AI", icon: MessageCircle, group: "AI" },
-  { key: "ai-provider", label: "AI Провайдер", icon: Cpu, group: "Настройки" },
+  { key: "ai-image", label: "Генерация изображения", icon: ImageIcon, group: "AI" },
+  { key: "ai-video", label: "Генерация видео", icon: Film, group: "AI" },
 ];
 
 const Admin = () => {
@@ -143,8 +114,6 @@ const Admin = () => {
     setLeads(data || []);
     setLoading(false);
   };
-
-  const fetchIgCount = () => { };
 
   useEffect(() => { if (session) { fetchLeads(); } }, [filterStatus, page, session]);
 
@@ -409,53 +378,11 @@ const Admin = () => {
             </>
           )}
 
-          {/* ═══ INSTAGRAM ANALYTICS ═══ */}
-          {section === "ig-analytics" && <AdminInstagramAnalytics />}
-
-          {/* ═══ WORKS / PORTFOLIO ═══ */}
-          {section === "works" && <AdminWorks />}
-
-          {/* ═══ PACKAGES ═══ */}
-          {section === "packages" && <AdminPackages />}
-
-          {/* ═══ AI GENERATOR ═══ */}
-          {section === "ai" && <AdminAIGenerator />}
-
-          {/* ═══ AI FACADE GENERATOR ═══ */}
-          {section === "ai-facade" && <AdminFacadeGenerator />}
+          {/* ═══ AI IMAGE GENERATOR ═══ */}
+          {section === "ai-image" && <AdminDecorImageGenerator />}
 
           {/* ═══ AI VIDEO GENERATOR ═══ */}
           {section === "ai-video" && <AdminWanVideo />}
-
-          {/* ═══ AI DECOR PROMPT GENERATOR ═══ */}
-          {section === "ai-decor-prompt" && <AdminDecorPromptGenerator />}
-
-          {/* ═══ AI PROVIDER SETTINGS ═══ */}
-          {section === "ai-provider" && <AdminAIProvider />}
-
-          {/* ═══ VENUE ANALYZER ═══ */}
-          {section === "venue" && <AdminVenueAnalyzer />}
-
-          {/* ═══ AI INSIGHTS ═══ */}
-          {section === "ai-insights" && <AdminAIInsights />}
-
-          {/* ═══ ANALYTICS ═══ */}
-          {section === "analytics" && <AdminAnalytics />}
-
-          {/* ═══ EVENT PIPELINE ═══ */}
-          {section === "event-pipeline" && <AdminEventPlannerPipeline />}
-
-          {/* ═══ MEDIA MANAGER ═══ */}
-          {section === "media" && <AdminMediaManager />}
-
-          {/* ═══ BRAND DESIGN ═══ */}
-          {section === "brand" && <AdminBrandDesign />}
-
-          {/* ═══ TELEGRAM SETTINGS ═══ */}
-          {section === "telegram" && <AdminTelegramSettings />}
-
-          {/* ═══ CONCIERGE AI ═══ */}
-          {section === "concierge" && <AdminConcierge />}
          </Suspense>
         </main>
       </div>

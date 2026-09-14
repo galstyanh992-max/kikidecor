@@ -438,6 +438,60 @@ export async function aiGenerateImage(opts: {
   }
 }
 
+// ─── Native Gemini API (generateContent) ─────────────────────────────────────
+// Direct calls to Google AI Studio (generativelanguage.googleapis.com).
+// Used for native image generation with cheap models like gemini-2.5-flash-image.
+
+const GEMINI_NATIVE_HOST = "https://generativelanguage.googleapis.com/v1beta";
+
+export interface GeminiNativeOptions {
+  apiKey: string;
+  model: string;
+  parts: any[];
+  generationConfig?: Record<string, any>;
+  timeoutMs?: number;
+}
+
+export async function geminiNative(opts: GeminiNativeOptions): Promise<any> {
+  const url = `${GEMINI_NATIVE_HOST}/models/${opts.model}:generateContent?key=${opts.apiKey}`;
+  console.log(`[ai:gemini-native] model=${opts.model}`);
+
+  const response = await fetchWithTimeout(
+    url,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: opts.parts }],
+        ...(opts.generationConfig ? { generationConfig: opts.generationConfig } : {}),
+      }),
+    },
+    opts.timeoutMs ?? 60_000
+  );
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    console.error(`[ai:gemini-native] HTTP ${response.status}:`, body.slice(0, 400));
+    if (response.status === 429) throw new GeminiError("RATE_LIMIT", "Rate limit exceeded");
+    if (response.status === 403) throw new GeminiError("MISSING_API_KEY", "Gemini API key invalid or disabled");
+    throw new GeminiError("PROVIDER_REQUEST_FAILED", `Gemini native error ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+/** Extract the first inline image (base64) from a native Gemini generateContent response. */
+export function extractNativeImage(data: any): { mimeType: string; data: string } | null {
+  const parts = data?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return null;
+  for (const part of parts) {
+    if (part?.inlineData?.data) {
+      return { mimeType: part.inlineData.mimeType || "image/png", data: part.inlineData.data };
+    }
+  }
+  return null;
+}
+
 // ─── Image fetch utility ─────────────────────────────────────────────────────
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -501,8 +555,6 @@ export function getTextModel(): string { return AI_MODELS.VISION; }
 export const IMAGE_GEN_MODEL = AI_MODELS.IMAGE_GEN;
 /** @deprecated Use aiChat */
 export const geminiChat = aiChat;
-/** @deprecated Use extractGatewayImage */
-export function extractNativeImage(data: any) { return null; }
 /** @deprecated Use extractGatewayImage + parseDataUri */
 export function extractNativeText(data: any): string | null {
   return data?.choices?.[0]?.message?.content ?? null;
