@@ -6,7 +6,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
-  CORS_HEADERS, AI_MODELS, requireApiKey, aiChat, aiGenerateImage,
+  CORS_HEADERS, AI_MODELS, requireApiKeyAsync, aiChat, aiGenerateImage,
   extractToolCall, fetchImageAsBase64,
   okResponse, handleError, GeminiError, errorResponse,
 } from "../_shared/gemini.ts";
@@ -42,7 +42,7 @@ serve(async (req) => {
       return errorResponse("INVALID_INPUT", "Required: eventType, venueType, colorPalette, guestCount OR textDescription (min 10 chars)", 400);
     }
 
-    const API_KEY = requireApiKey();
+    const API_KEY = await requireApiKeyAsync();
     console.log(`[generate-decor-concept] reasoning=${AI_MODELS.REASONING} img=${AI_MODELS.IMAGE_GEN}`);
 
     // Optional: fetch venue photo
